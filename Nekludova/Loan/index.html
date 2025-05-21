@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Loan Calculator</title>
+    <style>
+      :root {
+        --primary: #724ae2;
+        --secondary: #50c878;
+        --bg: #f9fbfd;
+        --text: #114d88;
+        --success: #27ae60;
+        --danger: #b82960;
+        --font: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        user-select: none;
+      }
+      .calculator {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+        width: 360px;
+        padding: 2rem;
+        display: grid;
+        grid-gap: 1.5rem;
+      }
+      h1 {
+        margin: 0 0 1rem 0;
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: var(--primary);
+        text-align: center;
+      }
+      label {
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      input[type="number"] {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        font-size: 1rem;
+        border-radius: 8px;
+        border: 2px solid #d1d9e6;
+        transition: border-color 0.3s;
+        outline-offset: 2px;
+      }
+      input[type="number"]:focus {
+        border-color: var(--primary);
+        outline: none;
+      }
+      .checkmark {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--secondary);
+        position: relative;
+        flex-shrink: 0;
+        margin-left: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .checkmark svg {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        fill: none;
+        stroke: var(--secondary);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      input.valid + .checkmark {
+        opacity: 1;
+      }
+      button {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 6px 12px rgba(74, 144, 226, 0.4);
+        transition: background-color 0.3s ease;
+      }
+      button:disabled {
+        background: #7c5ced;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      button:hover:not(:disabled) {
+        background: #3d7fcc;
+      }
+      .result {
+        background: #eaf6ff;
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text);
+        user-select: text;
+      }
+      .result span {
+        font-weight: 700;
+        color: var(--secondary);
+      }
+      .error {
+        color: var(--danger);
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: -1rem;
+        margin-bottom: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <form class="calculator" id="loanCalc" novalidate>
+      <h1>Loan Calculator</h1>
+
+      <div>
+        <label for="amount">
+          Loan Amount
+          <div class="checkmark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+        </label>
+        <input
+          type="number"
+          id="amount"
+          name="amount"
+          min="1000"
+          max="1000000"
+          step="100"
+          placeholder="e.g. 25000"
+          required
+        />
+        <div class="error" id="amountError" aria-live="polite"></div>
+      </div>
+
+      <div>
+        <label for="interest">
+          Annual Interest Rate (%)
+          <div class="checkmark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+        </label>
+        <input
+          type="number"
+          id="interest"
+          name="interest"
+          min="0.01"
+          max="100"
+          step="0.01"
+          placeholder="e.g. 5.5"
+          required
+        />
+        <div class="error" id="interestError" aria-live="polite"></div>
+      </div>
+
+      <div>
+        <label for="years">
+          Loan Term (Years)
+          <div class="checkmark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+        </label>
+        <input
+          type="number"
+          id="years"
+          name="years"
+          min="1"
+          max="50"
+          step="1"
+          placeholder="e.g. 15"
+          required
+        />
+        <div class="error" id="yearsError" aria-live="polite"></div>
+      </div>
+
+      <button type="submit" id="calculate" disabled>Calculate</button>
+
+      <div class="result" aria-live="polite" id="result" hidden></div>
+    </form>
+
+    <script>
+      (() => {
+        const form = document.getElementById("loanCalc");
+        const amountInput = form.amount;
+        const interestInput = form.interest;
+        const yearsInput = form.years;
+        const calcBtn = form.querySelector("button[type=submit]");
+        const resultEl = document.getElementById("result");
+
+        const errors = {
+          amount: document.getElementById("amountError"),
+          interest: document.getElementById("interestError"),
+          years: document.getElementById("yearsError"),
+        };
+
+        // Validate individual input and toggle checkmark + error message
+        function validateInput(input, min, max, name) {
+          const val = parseFloat(input.value);
+          let valid = true;
+          let message = "";
+
+          if (isNaN(val)) {
+            valid = false;
+            message = "This field is required.";
+          } else if (val < min) {
+            valid = false;
+            message = `Must be ≥ ${min}${name === "interest" ? "%" : ""}.`;
+          } else if (val > max) {
+            valid = false;
+            message = `Must be ≤ ${max}${name === "interest" ? "%" : ""}.`;
+          }
+
+          if (valid) {
+            input.classList.add("valid");
+            errors[name].textContent = "";
+          } else {
+            input.classList.remove("valid");
+            errors[name].textContent = message;
+          }
+          return valid;
+        }
+
+        // Check all inputs for enabling submit
+        function checkFormValidity() {
+          const isAmountValid = validateInput(
+            amountInput,
+            1000,
+            1000000,
+            "amount"
+          );
+          const isInterestValid = validateInput(
+            interestInput,
+            0.01,
+            100,
+            "interest"
+          );
+          const isYearsValid = validateInput(yearsInput, 1, 50, "years");
+
+          calcBtn.disabled = !(
+            isAmountValid &&
+            isInterestValid &&
+            isYearsValid
+          );
+          if (calcBtn.disabled) resultEl.hidden = true;
+        }
+
+        // Calculate monthly payment, total payment, total interest
+        function calculateLoan(amount, annualRate, years) {
+          const principal = amount;
+          const monthlyRate = annualRate / 100 / 12;
+          const payments = years * 12;
+
+          // Amortization formula: M = P * r(1+r)^n / ((1+r)^n - 1)
+          let monthlyPayment;
+          if (monthlyRate === 0) {
+            monthlyPayment = principal / payments;
+          } else {
+            monthlyPayment =
+              (principal * monthlyRate * Math.pow(1 + monthlyRate, payments)) /
+              (Math.pow(1 + monthlyRate, payments) - 1);
+          }
+          const totalPayment = monthlyPayment * payments;
+          const totalInterest = totalPayment - principal;
+
+          return {
+            monthlyPayment,
+            totalPayment,
+            totalInterest,
+          };
+        }
+
+        // Format numbers as currency
+        function formatCurrency(num) {
+          return num.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+          });
+        }
+
+        // Event listeners for real-time validation
+        [amountInput, interestInput, yearsInput].forEach((input) => {
+          input.addEventListener("input", () => {
+            validateInput(
+              input,
+              input === amountInput ? 1000 : input === interestInput ? 0.01 : 1,
+              input === amountInput
+                ? 1000000
+                : input === interestInput
+                ? 100
+                : 50,
+              input.name
+            );
+            checkFormValidity();
+          });
+          input.addEventListener("blur", () => {
+            // trim trailing zeros on interest input
+            if (
+              input === interestInput &&
+              input.validity.valid &&
+              input.value
+            ) {
+              input.value = parseFloat(input.value).toFixed(2);
+            }
+          });
+        });
+
+        // Form submission handler
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          if (calcBtn.disabled) return;
+
+          const amount = parseFloat(amountInput.value);
+          const interest = parseFloat(interestInput.value);
+          const years = parseInt(yearsInput.value, 10);
+
+          const { monthlyPayment, totalPayment, totalInterest } = calculateLoan(
+            amount,
+            interest,
+            years
+          );
+
+          // Display results with checkmarks for each value
+          resultEl.innerHTML = `
+        <p><strong>Monthly Payment:</strong> <span>${formatCurrency(
+          monthlyPayment
+        )}</span></p>
+        <p><strong>Total Payment:</strong> <span>${formatCurrency(
+          totalPayment
+        )}</span></p>
+        <p><strong>Total Interest:</strong> <span>${formatCurrency(
+          totalInterest
+        )}</span></p>
+      `;
+          resultEl.hidden = false;
+        });
+
+        // Initial validation state
+        checkFormValidity();
+      })();
+    </script>
+  </body>
+</html>
+

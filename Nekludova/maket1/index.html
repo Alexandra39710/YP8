@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modern Styled Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Modern Styled Calculator</h1>
+      <form id="calcForm">
+        <div class="row-one" role="radiogroup" aria-label="First row options">
+          <h2>Стиль</h2>
+          <div class="radio-cards">
+            <label class="radio-card" tabindex="0">
+              <input type="radio" name="option1" value="10" required />
+              <div class="radio-custom">
+                <img src="./image/kitchen1.png" alt="Hammer" />
+                <div class="text">Современный стиль</div>
+              </div>
+            </label>
+            <label class="radio-card" tabindex="0">
+              <input type="radio" name="option1" value="20" />
+              <div class="radio-custom">
+                <img src="./image/kitchen2.png" alt="Screwdriver" />
+                <div class="text">Кухни Лофт</div>
+              </div>
+            </label>
+            <label class="radio-card" tabindex="0">
+              <input type="radio" name="option1" value="15" />
+              <div class="radio-custom">
+                <img src="./image/kitchen3.png" alt="Wrench" />
+                <div class="text">Классический стиль</div>
+              </div>
+            </label>
+            <label class="radio-card" tabindex="0">
+              <input type="radio" name="option1" value="25" />
+              <div class="radio-custom">
+                <img src="./image/kitchen4.png" alt="Drill" />
+                <div class="text">Другое</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="row-two" role="radiogroup" aria-label="Second row options">
+          <h2>Форма</h2>
+          <div class="radio-cards2">
+            <label class="radio-card2" tabindex="0">
+              <input type="radio" name="option2" value="5" required />
+              <div class="radio-custom2">
+                <img src="./image/form1.png" alt="Bolt" />
+                <div class="text2">Прямая кухня</div>
+              </div>
+            </label>
+            <label class="radio-card2" tabindex="0">
+              <input type="radio" name="option2" value="8" />
+              <div class="radio-custom2">
+                <img src="./image/form2.png" alt="Nail" />
+                <div class="text2">Угловая кухня</div>
+              </div>
+            </label>
+            <label class="radio-card2" tabindex="0">
+              <input type="radio" name="option2" value="12" />
+              <div class="radio-custom2">
+                <img src="./image/form3.png" alt="Gear" />
+                <div class="text2">П-образная кухня</div>
+              </div>
+            </label>
+            <label class="radio-card2" tabindex="0">
+              <input type="radio" name="option2" value="7" />
+              <div class="radio-custom2">
+                <img src="./image/form4.png" alt="Screw" />
+                <div class="text2">Параллельная кухня</div>
+              </div>
+            </label>
+            <label class="radio-card2" tabindex="0">
+              <input type="radio" name="option2" value="9" />
+              <div class="radio-custom2">
+                <img src="./image/form5.png" alt="Wheel" />
+                <div class="text2">Кухня с островом</div>
+              </div>
+            </label>
+            <label class="radio-card2" tabindex="0">
+              <input type="radio" name="option2" value="6" />
+              <div class="radio-custom2">
+                <img src="./image/form6.png" alt="Pipe" />
+                <div class="text2">Другие формы</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="row-three" role="radiogroup" aria-label="Third row options">
+          <h2>Площадь кухни:</h2>
+          <div class="buttons">
+            <label class="radio-card3" tabindex="0">
+              <div class="radio-custom">
+                <input type="radio" name="option3" value="30" required />
+                <div class="text3">До 5 м²</div>
+              </div>
+            </label> 
+            <label class="radio-card3" tabindex="0">
+              <input type="radio" name="option3" value="40" />
+              <div class="text3">До 8 м²</div>
+            </label>
+            <label class="radio-card3" tabindex="0">
+              <input type="radio" name="option3" value="35" />
+              <div class="text3">До 15 м²</div>
+            </label>
+            <label class="radio-card3" tabindex="0">
+              <input type="radio" name="option3" value="45" />
+              <div class="text3">Другое</div>
+            </label>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="calc-btn"
+          aria-label="Calculate total cost"
+        >
+          Calculate Cost
+        </button>
+      </form>
+
+      <div id="result" role="alert" aria-live="polite"></div>
+    </div>
+
+    <script>
+      // Form submit handler to calculate cost based on selected radio buttons
+      document.getElementById("calcForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.target;
+
+        // Get selected values from each group
+        const opt1 = form.option1.value;
+        const opt2 = form.option2.value;
+        const opt3 = form.option3.value;
+
+        // Calculate total cost
+        const total = [+opt1, +opt2, +opt3].reduce((a, b) => a + b, 0);
+
+        // Display result with currency formatting
+        document.getElementById(
+          "result"
+        ).textContent = `Total Cost: $${total.toFixed(2)}`;
+      });
+
+      // Accessibility: Add keyboard focus styles and keyboard navigation for radio cards
+      const radioCards = document.querySelectorAll("label.radio-card");
+      radioCards.forEach((card) => {
+        card.addEventListener("keydown", (e) => {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            const input = card.querySelector("input[type=radio]");
+            input.checked = true;
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+            card.focus();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
